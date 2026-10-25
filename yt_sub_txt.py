@@ -5,20 +5,26 @@ import tempfile
 from itertools import groupby
 from pathlib import Path
 
+import pyperclip
 import pysubs2
 import yt_dlp
 
 
 def parse_args(argv):
-    """Split argv into (url, extra yt-dlp args, output path or None)."""
+    """Split argv into (url, extra yt-dlp args, output path or None, copy)."""
     # We take over yt-dlp's -o/--output for our own result. The value is a plain
     # path, not a yt-dlp template. "-" means stdout. We cannot use argparse here:
     # parse_known_args can mistake the value of an unknown yt-dlp option for the URL.
+    # --copy has no short form, because yt-dlp's -c is --continue.
     args = list(argv)
     output = None
+    copy = False
     i = 0
     while i < len(args):
-        if args[i] in ("-o", "--output"):
+        if args[i] == "--copy":
+            copy = True
+            del args[i]
+        elif args[i] in ("-o", "--output"):
             if i + 1 >= len(args):
                 print(f"{args[i]} needs a value.", file=sys.stderr)
                 sys.exit(1)
@@ -32,18 +38,23 @@ def parse_args(argv):
 
     if not args:
         print(
-            "Usage: yt-sub-txt <video_url> [-o PATH|-] [extra yt-dlp args...]\n"
+            "Usage: yt-sub-txt <video_url> [-o PATH|-|--copy] [extra yt-dlp args...]\n"
             "  -o PATH  write the text to PATH (a plain path, not a yt-dlp template)\n"
-            "  -o -     write the text to stdout",
+            "  -o -     write the text to stdout\n"
+            "  --copy   copy the text to the clipboard",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    return args[0], args[1:], output
+    if copy and output is not None:
+        print("--copy and -o both choose where the text goes; pass one.", file=sys.stderr)
+        sys.exit(1)
+
+    return args[0], args[1:], output, copy
 
 
 def main():
-    url, extra_args, output = parse_args(sys.argv[1:])
+    url, extra_args, output, copy = parse_args(sys.argv[1:])
 
     with tempfile.TemporaryDirectory() as tmp:
         outtmpl = str(Path(tmp) / "%(title)s.%(ext)s")
@@ -88,6 +99,11 @@ def main():
         out_name = srt_path.stem + ".txt"
 
     text = "\n".join(lines)
+    if copy:
+        pyperclip.copy(text)
+        print(f"Copied {len(text.splitlines())} lines to the clipboard")
+        return
+
     if output == "-":
         sys.stdout.reconfigure(encoding="utf-8")  # pyright: ignore[reportAttributeAccessIssue]
         print(text)

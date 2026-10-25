@@ -8,6 +8,7 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "curl-cffi>=0.16.3",
+    "pyperclip>=1.11.0",
     "pysubs2>=1.9.0",
     "yt-dlp>=2026.10.21",
 ]
