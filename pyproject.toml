@@ -1,0 +1,34 @@
+[project]
+name = "yt-sub-txt"
+version = "0.1.0"
+description = "Download YouTube subtitles and convert them to plain text"
+authors = [
+    { name = "Lex Song", email = "LexSong.tw@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "curl-cffi>=0.16.3",
+    "pysubs2>=1.9.0",
+    "yt-dlp>=2026.10.21",
+]
+
+[project.scripts]
+yt-sub-txt = "yt_sub_txt:main"
+
+# One file is the whole program. uv_build only builds package directories, so
+# flit_core (no dependencies) builds the single module yt_sub_txt.py instead.
+[build-system]
+requires = ["flit_core>=4.1,<5"]
+build-backend = "flit_core.buildapi"
+
+[tool.pyright]
+# Point Pyright (Claude Code / CLI / CI) at the uv-managed .venv. neovim resolves
+# it via before_init instead; both agree on ./.venv, so no conflict.
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint.isort]
+force-single-line = true
