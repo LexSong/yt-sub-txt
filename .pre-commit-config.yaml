@@ -1,6 +1,10 @@
-# A finished diff is the only state worth rewriting mechanically, so formatting
-# runs here and nowhere else. pre-commit would otherwise fetch its own pinned
-# ruff and drift from the one on PATH, hence `local`/`system` hooks.
+# A remote hook repo makes pre-commit install its own pinned ruff, which drifts
+# from the ruff on PATH, so these hooks are `local`/`system`. A pin per repo
+# suits a team that shares one repo. I work alone across many small repos, so
+# one ruff on PATH for all of them fits better. It also keeps conform.nvim and
+# pre-commit on the same binary. But a ruff update, such as one by topgrade,
+# can reformat code nobody touched. So when that happens, check for a ruff
+# update before blaming the edit.
 repos:
   - repo: local
     hooks:
@@ -18,3 +22,8 @@ repos:
         language: system
         types_or: [python, pyi]
         require_serial: true
+      - id: taplo-format
+        name: taplo format
+        entry: taplo format
+        language: system
+        types: [toml]
